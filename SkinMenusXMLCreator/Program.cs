@@ -5,26 +5,56 @@ using System.Linq;
 
 namespace SkinMenusXMLCreator
 {
+    /// <summary>
+    /// The image files have to be organized in folders inside the /Skins folder
+    /// Then for each folder, a series of xml layouts will be created
+    /// </summary>
+
     class Program
     {
-        private const string FILEPATH = "../../../Skins";
-        private const string OUTPUTPATH = "../../../XMLOutput";
-        private static int curr_id = 27;
+        private const string FILEPATH = "/Skins";
+        private const string OUTPUTPATH = "/XMLOutput";
+        private static int curr_id = 0;
+        private static int aux_id = 1;
 
         static void Main(string[] args)
         {
-            List<string> files = GetFileNames(FILEPATH); //get a list of the file names
+            string[] folders = GetFolderNames();
 
-            //for the emojis
-            //files = files.OrderBy(q => int.Parse(q.Split('_')[1])).ToList();
+            foreach(string folderPath in folders)
+            {
+                List<string> files = GetFileNames(folderPath); //get a list of the file names
 
-            List<List<List<string>>> files_batches = SplitList(SplitList(files)); //split in batches for each page
+                string folder_name = Path.GetFileName(folderPath);
 
-            CreateLayouts(files_batches, OUTPUTPATH);
+                //for the emojis
+                if(folder_name.Equals("1_Emojis"))
+                {
+                    files = files.OrderBy(q => int.Parse(q.Split('_')[1])).ToList();
+                }
+
+                List<List<List<string>>> files_batches = SplitList(SplitList(files)); //split in batches for each page
+
+                string projectDirectory = Environment.CurrentDirectory;
+                CreateLayouts(files_batches, projectDirectory + "/../../.." + OUTPUTPATH);
+            }
         }
 
         /// <summary>
-        /// Gets a list of the file names in a directory
+        /// Returns the full path for each image folder
+        /// </summary>
+        /// <returns></returns>
+        static string[] GetFolderNames()
+        {
+            string projectDirectory = Environment.CurrentDirectory;
+
+            return Directory.GetDirectories(projectDirectory + "/../../.." + FILEPATH)
+                            .Select(Path.GetFullPath)
+                            .ToArray();
+        }
+
+        /// <summary>
+        /// Gets a list of the .png file names in a directory
         /// </summary>
         /// <returns></returns>
         static List<string> GetFileNames(string path)
@@ -92,7 +122,6 @@ namespace SkinMenusXMLCreator
                 using(StreamWriter sw = File.CreateText(aux_path))
                 {
                     WriteHeader(sw);
-                    int aux_id = 1;
 
                     //for each row
                     foreach(List<string> batch_2 in batch_1)
